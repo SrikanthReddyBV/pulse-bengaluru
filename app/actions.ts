@@ -1,10 +1,11 @@
 'use server';
 import { createClient } from '@supabase/supabase-js';
 
+
 // Safe Backend Client
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
 export async function getLiveDonors() {
@@ -16,7 +17,12 @@ export async function getLiveDonors() {
             .eq('is_active', true);
 
         if (error) {
-            console.error("Pulse Error:", error);
+            console.error("Pulse Database Error:", error);
+            return [];
+        }
+
+        if (!data) {
+            console.log("Pulse: No donor data returned");
             return [];
         }
 
@@ -29,6 +35,7 @@ export async function getLiveDonors() {
         }));
 
     } catch (err) {
+        console.error("Pulse Network Error:", err);
         return [];
     }
 }

@@ -62,12 +62,12 @@ export default function LiveMap() {
                 <h1 className="text-4xl font-black text-white uppercase tracking-tighter drop-shadow-lg">
                     Live Network
                 </h1>
-                <div className="flex items-center gap-2 mt-2">
+                {/* <div className="flex items-center gap-2 mt-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     <p className="text-[10px] text-green-400 font-bold uppercase tracking-[0.2em]">
                         {loading ? "Scanning..." : `${donors.length} Lifelines Active`}
                     </p>
-                </div>
+                </div> */}
             </div>
 
             {/* 2. The Map */}

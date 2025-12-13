@@ -6,10 +6,11 @@ import { MapPin, Phone, Heart, ShieldCheck, ArrowRight, Loader2, Building, User,
 import { useRouter } from 'next/navigation';
 import LocationPicker from '@/components/LocationPicker';
 
+
 // Connect to Database
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
 const maskLocation = (lat: number, lng: number) => {
