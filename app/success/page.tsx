@@ -1,10 +1,11 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import LifelineBadge from '@/components/LifelineBadge';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-export default function SuccessPage() {
+function SuccessContent() {
     const searchParams = useSearchParams();
     const name = searchParams.get('name') || 'Donor';
     const blood = searchParams.get('blood') || 'O+';
@@ -27,5 +28,17 @@ export default function SuccessPage() {
             </Link>
 
         </div>
+    );
+}
+
+export default function SuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
+                <div className="text-gray-500 text-xs font-light tracking-wide">Loading...</div>
+            </div>
+        }>
+            <SuccessContent />
+        </Suspense>
     );
 }
