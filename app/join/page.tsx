@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Phone, Heart, ShieldCheck, ArrowRight, Loader2, Building, User, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import LocationPicker from '@/components/LocationPicker';
 
 // Connect to Database
 const supabase = createClient(
@@ -23,6 +24,7 @@ export default function JoinPulse() {
     const router = useRouter();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [pickerMode, setPickerMode] = useState<'home' | 'office' | null>(null);
 
     // Form Data State
     const [data, setData] = useState({
@@ -37,25 +39,22 @@ export default function JoinPulse() {
         consent: false
     });
 
-    const getLocation = (type: 'home' | 'office') => {
-        setLoading(true);
-        if (!navigator.geolocation) {
-            alert("GPS Required.");
-            setLoading(false);
-            return;
-        }
-        navigator.geolocation.getCurrentPosition((pos) => {
-            const isHome = type === 'home';
-            const { lat, lng } = isHome
-                ? maskLocation(pos.coords.latitude, pos.coords.longitude)
-                : { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    const handleLocationConfirm = (lat: number, lng: number) => {
+        if (!pickerMode) return;
 
-            setData(prev => ({ ...prev, [`${type}_lat`]: lat, [`${type}_lng`]: lng }));
-            setLoading(false);
-        }, () => {
-            alert("Location denied.");
-            setLoading(false);
-        });
+        // Apply privacy jitter ONLY if it's Home
+        const isHome = pickerMode === 'home';
+        const { lat: finalLat, lng: finalLng } = isHome
+            ? maskLocation(lat, lng)
+            : { lat, lng };
+
+        setData(prev => ({
+            ...prev,
+            [`${pickerMode}_lat`]: finalLat,
+            [`${pickerMode}_lng`]: finalLng
+        }));
+
+        setPickerMode(null); // Close picker
     };
 
     const submitData = async () => {
@@ -63,7 +62,6 @@ export default function JoinPulse() {
         setLoading(true);
 
         const { error } = await supabase.from('donors').insert({
-            employee_id: `EMP-${Math.floor(Math.random() * 9000) + 1000}`,
             name: data.name,
             age: parseInt(data.age),
             blood_group: data.blood,
@@ -80,7 +78,10 @@ export default function JoinPulse() {
             alert("Error: " + error.message);
             setLoading(false);
         } else {
-            setTimeout(() => router.push('/'), 1000);
+            setTimeout(() => {
+                // Pass name and blood to the success page
+                router.push(`/success?name=${encodeURIComponent(data.name)}&blood=${encodeURIComponent(data.blood)}`);
+            }, 1000);
         }
     };
 
@@ -103,6 +104,15 @@ export default function JoinPulse() {
                     transition={{ duration: 0.8 }}
                 />
             </div>
+
+            {/* Location Picker Modal */}
+            {pickerMode && (
+                <LocationPicker
+                    mode='home'
+                    onConfirm={handleLocationConfirm}
+                    onCancel={() => setPickerMode(null)}
+                />
+            )}
 
             <AnimatePresence mode='wait'>
 
@@ -207,12 +217,11 @@ export default function JoinPulse() {
                         <div className="space-y-3">
                             {/* Home */}
                             <button
-                                onClick={() => getLocation('home')}
+                                onClick={() => setPickerMode('home')}
                                 className={`w-full p-4 rounded-xl border text-left transition-all duration-300 group ${data.home_lat ? 'border-green-500 bg-green-500/5' : 'border-gray-800 hover:border-gray-600 bg-gray-900/20'}`}
                             >
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-base font-medium flex items-center gap-3"><MapPin size={16} className="text-gray-400 group-hover:text-red-500 transition-colors" /> Home</span>
-                                    {loading && !data.home_lat && <Loader2 className="animate-spin text-gray-500" size={14} />}
                                     {data.home_lat !== 0 && <span className="text-[10px] text-green-500 font-bold">SECURED</span>}
                                 </div>
                                 <p className="text-[10px] text-gray-500 pl-7 opacity-80">
@@ -222,7 +231,7 @@ export default function JoinPulse() {
 
                             {/* Office */}
                             <button
-                                onClick={() => getLocation('office')}
+                                onClick={() => setPickerMode('office')}
                                 className={`w-full p-4 rounded-xl border text-left transition-all duration-300 group ${data.office_lat ? 'border-green-500 bg-green-500/5' : 'border-gray-800 hover:border-gray-600 bg-gray-900/20'}`}
                             >
                                 <div className="flex justify-between items-center mb-1">
